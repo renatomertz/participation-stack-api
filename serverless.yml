@@ -1,17 +1,76 @@
-# NOTE: update this with your service name
 service: participation-app-api
 
-# Create an optimized package for our functions 
 package:
   individually: true
 
 plugins:
-  - serverless-bundle # Package our functions with Webpack
+  - serverless-bundle
   - serverless-offline
-  - serverless-dotenv-plugin # Load .env as environment variables
+  - serverless-dotenv-plugin
 
 provider:
   name: aws
   runtime: nodejs10.x
   stage: dev
   region: us-west-2
+
+  environment:
+    participationTableName: participation
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeTable
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+      Resource: "arn:aws:dynamodb:us-west-2:*:*"
+
+functions:
+  create:
+    handler: create.main
+    events:
+      - http:
+        path: participations
+        method: post
+        cors: true
+        authorizer: aws_iam
+
+  get:
+    handler: get.main
+    events:
+      - http:
+          path: participations/{id}
+          method: get
+          cors: true
+          authorizer: aws_iam
+
+  list:
+    handler: list.main
+    events:
+      - http:
+          path: participations
+          method: get
+          cors: true
+          authorizer: aws_iam
+
+  update:
+    handler: update.main
+    events:
+      - http:
+          path: participations/{id}
+          method: put
+          cors: true
+          authorizer: aws_iam
+
+  delete:
+    handler: delete.main
+    events:
+      - http:
+          path: participations/{id}
+          method: delete
+          cors: true
+          authorizer: aws_iam
